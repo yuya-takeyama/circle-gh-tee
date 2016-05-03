@@ -1,3 +1,8 @@
-test:
+dependencies:
   post:
-    - echo $CI_PULL_REQUEST
+    - go get github.com/golang/lint/golint
+
+test:
+  override:
+    - ./circle-gh-tee -- go test -v -race ./...
+    - ./circle-gh-tee -- golint

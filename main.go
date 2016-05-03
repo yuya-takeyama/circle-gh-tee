@@ -18,7 +18,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// App's name displayed in help
+// AppName is displayed in help command
 const AppName = "circle-gh-tee"
 
 type options struct {
@@ -128,7 +128,7 @@ func circleGhTee(cmdName string, cmdArgs []string, stdin io.Reader, stdout io.Wr
 		panic(prNumberErr)
 	}
 
-	postErr := postComment(os.Getenv("CIRCLE_PR_USERNAME"), os.Getenv("CIRCLE_PR_REPONAME"), prNumber, commentBuffer.String(), os.Getenv("GITHUB_API_TOKEN"))
+	postErr := postComment(os.Getenv("CIRCLE_PROJECT_USERNAME"), os.Getenv("CIRCLE_PROJECT_REPONAME"), prNumber, commentBuffer.String(), os.Getenv("GITHUB_API_TOKEN"))
 	if postErr != nil {
 		panic(postErr)
 	}
