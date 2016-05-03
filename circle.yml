@@ -1,3 +1,4 @@
 test:
-  post:
-    - go run main.go version.go -- go test
+  override:
+    - ./circle-gh-tee -- go test -v -race ./...
+    - ./circle-gh-tee -- golint
