@@ -1,3 +1,7 @@
+dependencies:
+  post:
+    - go get github.com/golang/lint/golint
+
 test:
   override:
     - ./circle-gh-tee -- go test -v -race ./...
