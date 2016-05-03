@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strconv"
+	"strings"
 	"text/template"
 
 	"github.com/google/go-github/github"
@@ -27,19 +28,25 @@ type options struct {
 
 var opts options
 
-const defaultExitZeroTemplate = ":white_check_mark: Exited with `{{.ExitStatus}}`.\n\n" +
+const defaultExitZeroTemplate = ":white_check_mark: `{{.FullCmd}}` exited with `{{.ExitStatus}}`.\n\n" +
 	"```\n" +
 	"{{.Result}}\n" +
 	"```"
 
-const defaultExitNonZeroTemplate = ":no_entry_sign: Exited with `{{.ExitStatus}}`.\n" +
+const defaultExitNonZeroTemplate = ":no_entry_sign: `{{.FullCmd}}` exited with `{{.ExitStatus}}`.\n" +
 	"```\n" +
 	"{{.Result}}\n" +
 	"```"
 
 type Context struct {
+	Cmd        string
+	Args       []string
 	ExitStatus int
 	Result     string
+}
+
+func (c *Context) FullCmd() string {
+	return c.Cmd + " " + strings.Join(c.Args, " ")
 }
 
 func main() {
@@ -81,9 +88,11 @@ func circleGhTee(cmdName string, cmdArgs []string, stdin io.Reader, stdout io.Wr
 		panic(err)
 	}
 
-	ctx := Context{
-		exitStatus,
-		removeAnsiColor(resultBuffer.String()),
+	ctx := &Context{
+		Cmd:        cmdName,
+		Args:       cmdArgs,
+		ExitStatus: exitStatus,
+		Result:     removeAnsiColor(resultBuffer.String()),
 	}
 
 	var t *template.Template
@@ -108,6 +117,8 @@ func circleGhTee(cmdName string, cmdArgs []string, stdin io.Reader, stdout io.Wr
 	if postErr != nil {
 		panic(postErr)
 	}
+
+	os.Exit(exitStatus)
 }
 
 var prNumberRegexp *regexp.Regexp = regexp.MustCompile(`/pull/(\d+)$`)
