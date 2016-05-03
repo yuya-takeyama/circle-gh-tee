@@ -18,6 +18,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// App's name displayed in help
 const AppName = "circle-gh-tee"
 
 type options struct {
@@ -38,14 +39,14 @@ const defaultExitNonZeroTemplate = ":no_entry_sign: `{{.FullCmd}}` exited with `
 	"{{.Result}}\n" +
 	"```"
 
-type Context struct {
+type context struct {
 	Cmd        string
 	Args       []string
 	ExitStatus int
 	Result     string
 }
 
-func (c *Context) FullCmd() string {
+func (c *context) FullCmd() string {
 	return c.Cmd + " " + strings.Join(c.Args, " ")
 }
 
@@ -102,7 +103,7 @@ func circleGhTee(cmdName string, cmdArgs []string, stdin io.Reader, stdout io.Wr
 		panic(err)
 	}
 
-	ctx := &Context{
+	ctx := &context{
 		Cmd:        cmdName,
 		Args:       cmdArgs,
 		ExitStatus: exitStatus,
@@ -135,7 +136,7 @@ func circleGhTee(cmdName string, cmdArgs []string, stdin io.Reader, stdout io.Wr
 	os.Exit(exitStatus)
 }
 
-var prNumberRegexp *regexp.Regexp = regexp.MustCompile(`/pull/(\d+)$`)
+var prNumberRegexp = regexp.MustCompile(`/pull/(\d+)$`)
 
 func getPrNumber() (int, error) {
 	if os.Getenv("CI_PULL_REQUEST") != "" {
@@ -164,7 +165,7 @@ func postComment(user string, repo string, prNumber int, comment string, token s
 	return err
 }
 
-var ansiColorRegexp *regexp.Regexp = regexp.MustCompile(`\x1b\[[0-9;]*[mK]`)
+var ansiColorRegexp = regexp.MustCompile(`\x1b\[[0-9;]*[mK]`)
 
 func removeAnsiColor(str string) string {
 	return ansiColorRegexp.ReplaceAllLiteralString(str, "")
