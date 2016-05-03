@@ -69,10 +69,24 @@ func main() {
 	cmdName := args[0]
 	cmdArgs := args[1:]
 
-	circleGhTee(cmdName, cmdArgs, os.Stdin, os.Stdout, os.Stderr)
+	var exitZeroTemplate string
+	var exitNonZeroTemplate string
+
+	if opts.ExitZeroTemplate != "" {
+		exitZeroTemplate = opts.ExitZeroTemplate
+	} else {
+		exitZeroTemplate = defaultExitZeroTemplate
+	}
+	if opts.ExitNonZeroTemplate != "" {
+		exitNonZeroTemplate = opts.ExitNonZeroTemplate
+	} else {
+		exitNonZeroTemplate = defaultExitNonZeroTemplate
+	}
+
+	circleGhTee(cmdName, cmdArgs, os.Stdin, os.Stdout, os.Stderr, exitZeroTemplate, exitNonZeroTemplate)
 }
 
-func circleGhTee(cmdName string, cmdArgs []string, stdin io.Reader, stdout io.Writer, stderr io.Writer) {
+func circleGhTee(cmdName string, cmdArgs []string, stdin io.Reader, stdout io.Writer, stderr io.Writer, exitZeroTemplate string, exitNonZeroTemplate string) {
 	cmd := exec.Command(cmdName, cmdArgs...)
 
 	resultBuffer := new(bytes.Buffer)
@@ -98,9 +112,9 @@ func circleGhTee(cmdName string, cmdArgs []string, stdin io.Reader, stdout io.Wr
 	var t *template.Template
 
 	if exitStatus == 0 {
-		t = template.Must(template.New("exitZero").Parse(defaultExitZeroTemplate))
+		t = template.Must(template.New("exitZero").Parse(exitZeroTemplate))
 	} else {
-		t = template.Must(template.New("exitNonZero").Parse(defaultExitNonZeroTemplate))
+		t = template.Must(template.New("exitNonZero").Parse(exitNonZeroTemplate))
 	}
 
 	tmplErr := t.Execute(commentBuffer, ctx)
