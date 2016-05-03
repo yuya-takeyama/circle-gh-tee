@@ -18,7 +18,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// App's name displayed in help
+// AppName is displayed in help command
 const AppName = "circle-gh-tee"
 
 type options struct {
