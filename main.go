@@ -147,21 +147,21 @@ func getPrNumber() (int, error) {
 		}
 
 		return i, nil
-	} else {
-		gitBuffer := new(bytes.Buffer)
-		cmd := exec.Command("sh", "-c", `git --no-pager log --pretty=format:"%s" -1 | egrep -o "^Merge pull request #[0-9]+" | egrep -o "[0-9]+$"`)
-
-		cmd.Stdout = gitBuffer
-
-		cmd.Run()
-
-		i, err := strconv.Atoi(strings.TrimSpace(gitBuffer.String()))
-		if err != nil {
-			return -1, err
-		}
-
-		return i, nil
 	}
+
+	gitBuffer := new(bytes.Buffer)
+	cmd := exec.Command("sh", "-c", `git --no-pager log --pretty=format:"%s" -1 | egrep -o "^Merge pull request #[0-9]+" | egrep -o "[0-9]+$"`)
+
+	cmd.Stdout = gitBuffer
+
+	cmd.Run()
+
+	i, err := strconv.Atoi(strings.TrimSpace(gitBuffer.String()))
+	if err != nil {
+		return -1, err
+	}
+
+	return i, nil
 }
 
 func postComment(user string, repo string, prNumber int, comment string, token string) error {
