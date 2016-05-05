@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -135,18 +136,9 @@ func circleGhTee(cmdName string, cmdArgs []string, stdin io.Reader, stdout io.Wr
 	os.Exit(exitStatus)
 }
 
-var prNumberRegexp = regexp.MustCompile(`/pull/(\d+)$`)
-
 func getPrNumber() (int, error) {
 	if os.Getenv("CI_PULL_REQUEST") != "" {
-		matches := prNumberRegexp.FindStringSubmatch(os.Getenv("CI_PULL_REQUEST"))
-
-		i, err := strconv.Atoi(matches[1])
-		if err != nil {
-			return -1, err
-		}
-
-		return i, nil
+		return getPrNumberFromEnv(os.Getenv("CI_PULL_REQUEST"))
 	}
 
 	gitBuffer := new(bytes.Buffer)
@@ -157,6 +149,23 @@ func getPrNumber() (int, error) {
 	cmd.Run()
 
 	i, err := strconv.Atoi(strings.TrimSpace(gitBuffer.String()))
+	if err != nil {
+		return -1, err
+	}
+
+	return i, nil
+}
+
+var prNumberRegexp = regexp.MustCompile(`/pull/(\d+)$`)
+
+func getPrNumberFromEnv(ciPullRequest string) (int, error) {
+	matches := prNumberRegexp.FindStringSubmatch(ciPullRequest)
+
+	if matches == nil {
+		return -1, errors.New("Invalid $CI_PULL_REQUEST")
+	}
+
+	i, err := strconv.Atoi(matches[1])
 	if err != nil {
 		return -1, err
 	}
