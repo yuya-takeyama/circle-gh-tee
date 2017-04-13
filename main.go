@@ -175,13 +175,13 @@ func getPrNumberFromEnv(ciPullRequest string) (int, error) {
 }
 
 func postComment(user string, repo string, prNumber int, comment string, token string) error {
+	ctx := context.Background()
 	oauth2Token := &oauth2.Token{
 		AccessToken: os.Getenv("GITHUB_API_TOKEN"),
 	}
-	oauthClient := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(oauth2Token))
+	oauthClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(oauth2Token))
 	client := github.NewClient(oauthClient)
 	prComment := &github.IssueComment{Body: &comment}
-	ctx := context.Background()
 	_, _, err := client.Issues.CreateComment(ctx, user, repo, prNumber, prComment)
 
 	return err
