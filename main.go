@@ -15,6 +15,7 @@ import (
 	"github.com/google/go-github/github"
 	flags "github.com/jessevdk/go-flags"
 	"github.com/yuya-takeyama/posixexec"
+	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 )
 
@@ -39,14 +40,14 @@ const defaultExitNonZeroTemplate = ":no_entry_sign: `{{.FullCmd}}` exited with `
 	"{{.Result}}\n" +
 	"```"
 
-type context struct {
+type appContext struct {
 	Cmd        string
 	Args       []string
 	ExitStatus int
 	Result     string
 }
 
-func (c *context) FullCmd() string {
+func (c *appContext) FullCmd() string {
 	return c.Cmd + " " + strings.Join(c.Args, " ")
 }
 
@@ -103,7 +104,7 @@ func circleGhTee(cmdName string, cmdArgs []string, stdin io.Reader, stdout io.Wr
 		panic(err)
 	}
 
-	ctx := &context{
+	ctx := &appContext{
 		Cmd:        cmdName,
 		Args:       cmdArgs,
 		ExitStatus: exitStatus,
@@ -174,13 +175,14 @@ func getPrNumberFromEnv(ciPullRequest string) (int, error) {
 }
 
 func postComment(user string, repo string, prNumber int, comment string, token string) error {
+	ctx := context.Background()
 	oauth2Token := &oauth2.Token{
 		AccessToken: os.Getenv("GITHUB_API_TOKEN"),
 	}
-	oauthClient := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(oauth2Token))
+	oauthClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(oauth2Token))
 	client := github.NewClient(oauthClient)
 	prComment := &github.IssueComment{Body: &comment}
-	_, _, err := client.Issues.CreateComment(user, repo, prNumber, prComment)
+	_, _, err := client.Issues.CreateComment(ctx, user, repo, prNumber, prComment)
 
 	return err
 }
