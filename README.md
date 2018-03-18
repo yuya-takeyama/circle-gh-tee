@@ -2,6 +2,8 @@
 
 Command to execute a command and post its result to GitHub Pull Request
 
+<img src="images/example.png" width="385" height="190">
+
 ## Usage
 
 ```
