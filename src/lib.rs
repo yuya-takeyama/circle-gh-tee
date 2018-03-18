@@ -26,7 +26,7 @@ pub fn get_matches<'a>() -> ArgMatches<'a> {
     App::new("circle-gh-tee")
         .version("0.1.0")
         .author("Yuya Takeyama <sign.of.the.wolf.pentagram@gmail.com>")
-        .about("Command to execute command and post its result to GitHub")
+        .about("Command to run a command in Circle CI and post its result to GitHub Pull Request")
         .usage("circle-gh-tee [OPTIONS] -- <COMMAND>...")
         .arg(
             Arg::with_name("exit-zero-template")
