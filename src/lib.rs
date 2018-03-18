@@ -12,12 +12,12 @@ use std::io;
 use duct::cmd;
 use std::collections::HashMap;
 
-const DEFAULT_EXIT_ZERO: &str = ":white_check_mark: `{{full_command}}` exited with `0`.
+const DEFAULT_EXIT_ZERO: &str = ":white_check_mark: `$ {{full_command}}` exited with `0`.
 ```
 {{result}}
 ```";
 const DEFAULT_EXIT_NON_ZERO: &str =
-    ":no_entry_sign: `{{full_command}}` exited with `{{exit_status}}`.
+    ":no_entry_sign: `$ {{full_command}}` exited with `{{exit_status}}`.
 ```
 {{result}}
 ```";
@@ -130,15 +130,15 @@ impl Environment {
     pub fn load() -> Result<Environment, String> {
         let github_access_token = match env::var("GITHUB_ACCESS_TOKEN") {
             Ok(v) => v,
-            Err(e) => return Err(format!("Failed to get GitHub access token: {}", e)),
+            Err(e) => return Err(format!("Failed to get GITHUB_ACCESS_TOKEN: {}", e)),
         };
         let username = match env::var("CIRCLE_PROJECT_USERNAME") {
             Ok(v) => v,
-            Err(e) => return Err(format!("Failed to get username: {}", e)),
+            Err(e) => return Err(format!("Failed to get CIRCLE_PROJECT_USERNAME: {}", e)),
         };
         let reponame = match env::var("CIRCLE_PROJECT_REPONAME") {
             Ok(v) => v,
-            Err(e) => return Err(format!("Failed to get reponame: {}", e)),
+            Err(e) => return Err(format!("Failed to get CIRCLE_PROJECT_REPONAME: {}", e)),
         };
         let pull_request_url = env::var("CI_PULL_REQUEST").unwrap_or(String::from(""));
         let last_commit_comment = match process::Command::new("git")
