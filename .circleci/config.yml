@@ -1,0 +1,41 @@
+version: 2
+
+jobs:
+  install:
+    working_directory: ~/circle-gh-tee
+    docker:
+      - image: 'rust:latest'
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-cargo-{{ arch }}-{{ checksum "Cargo.lock" }}
+            - v1-cargo-{{ arch }}
+      - run: cargo check
+      - save_cache:
+          key: v1-cargo-{{ arch }}-{{ checksum "Cargo.lock" }}
+          paths:
+            - ~/.cargo
+            - ~/circle-gh-tee/target
+
+  test:
+    working_directory: ~/circle-gh-tee
+    docker:
+      - image: 'rust:latest'
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-cargo-{{ arch }}-{{ checksum "Cargo.lock" }}
+            - v1-cargo-{{ arch }}
+      - run: cargo test
+      - run: cargo run -- echo -- it works
+
+workflows:
+  version: 2
+  install-test:
+    jobs:
+      - install
+      - test:
+          requires:
+            - install
