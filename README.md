@@ -8,6 +8,19 @@ Command to execute a command and post its result to GitHub Pull Request
 $ circle-gh-tee [OPTIONS] -- <COMMAND>...
 ```
 
+### Required environment variable
+
+* `GITHUB_ACCESS_TOKEN`
+  * Personal access token of GitHub
+  * Required scope
+    * `repo`: Full control of private repositories
+
+Other variables are assumed to be set by Circle CI
+
+* `CIRCLE_PROJECT_USERNAME`
+* `CIRCLE_PROJECT_REPONAME`
+* `CI_PULL_REQUEST`
+
 ### Options
 
 * `--exit-zero-template <TEMPLATE>`
