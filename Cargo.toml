@@ -1,0 +1,10 @@
+[package]
+name = "circle-gh-tee"
+version = "0.1.0"
+authors = ["Yuya Takeyama <sign.of.the.wolf.pentagram@gmail.com>"]
+
+[dependencies]
+clap = "~2.31"
+duct = "~0.10.0"
+regex = "~0.2.0"
+reqwest = "~0.8.5"
