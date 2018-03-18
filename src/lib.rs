@@ -207,7 +207,7 @@ impl Environment {
     }
 
     fn get_pull_request_number_from_last_commit_comment(&self) -> Result<String, String> {
-        let re = Regex::new(r"^Merge pull request #([0-9]+)").unwrap();
+        let re = Regex::new(r"Merge pull request #([0-9]+) from").unwrap();
         match re.captures(&self.last_commit_comment) {
             Some(matches) => match matches.get(1) {
                 Some(matched) => Ok(String::from(matched.as_str())),
