@@ -99,7 +99,7 @@ pub fn post_comment(
     environment: Environment,
 ) -> Result<reqwest::Response, String> {
     let http_client = reqwest::Client::new();
-    let pull_request_url = match environment.get_pull_request_url() {
+    let pull_request_url = match environment.get_pull_request_comment_api_url() {
         Ok(url) => url,
         Err(e) => return Err(e),
     };
@@ -165,7 +165,7 @@ impl Environment {
         }
     }
 
-    pub fn get_pull_request_url(&self) -> Result<String, String> {
+    pub fn get_pull_request_comment_api_url(&self) -> Result<String, String> {
         let pull_request_number = match self.get_pull_request_number() {
             Ok(number) => number,
             Err(e) => return Err(e),
@@ -246,5 +246,57 @@ impl CommandResult {
             result: String::from(result),
             exit_status,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Environment;
+
+    #[test]
+    fn environment_get_pull_request_comment_api_url_from_pull_request_url_env() {
+        let environment = Environment {
+            github_access_token: String::from("token"),
+            username: String::from("user"),
+            reponame: String::from("repo"),
+            pull_request_url: String::from("https://github.com/user/repo/pull/1234"),
+            last_commit_comment: String::new(),
+        };
+        assert_eq!(
+            environment.get_pull_request_comment_api_url().unwrap(),
+            "https://api.github.com/repos/user/repo/issues/1234/comments"
+        );
+    }
+
+    #[test]
+    fn environment_get_pull_request_comment_api_url_from_last_commit_comment_env() {
+        let environment = Environment {
+            github_access_token: String::from("token"),
+            username: String::from("user"),
+            reponame: String::from("repo"),
+            pull_request_url: String::new(),
+            last_commit_comment: String::from("Merge pull request #4321 from test/branch"),
+        };
+        assert_eq!(
+            environment.get_pull_request_comment_api_url().unwrap(),
+            "https://api.github.com/repos/user/repo/issues/4321/comments"
+        );
+    }
+
+    #[test]
+    fn environment_get_pull_request_comment_api_url_err() {
+        let environment = Environment {
+            github_access_token: String::from("token"),
+            username: String::from("user"),
+            reponame: String::from("repo"),
+            pull_request_url: String::new(),
+            last_commit_comment: String::new(),
+        };
+        assert_eq!(
+            environment.get_pull_request_comment_api_url(),
+            Err(String::from(
+                "Failed to get Pull Request number from last commit comment: "
+            ))
+        );
     }
 }
