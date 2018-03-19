@@ -99,10 +99,7 @@ pub fn post_comment(
     environment: Environment,
 ) -> Result<reqwest::Response, String> {
     let http_client = reqwest::Client::new();
-    let pull_request_url = match environment.get_pull_request_comment_api_url() {
-        Ok(url) => url,
-        Err(e) => return Err(e),
-    };
+    let pull_request_url = try!(environment.get_pull_request_comment_api_url());
     let mut body = HashMap::new();
     body.insert(String::from("body"), comment);
     let mut headers = reqwest::header::Headers::new();
@@ -115,7 +112,7 @@ pub fn post_comment(
         .json(&body)
         .headers(headers)
         .send()
-        .or_else(|e| Err(format!("Failed to post a comment to GitHub: {}", e)))
+        .map_err(|e| format!("Failed to post a comment to GitHub: {}", e))
 }
 
 pub struct Environment {
@@ -128,29 +125,20 @@ pub struct Environment {
 
 impl Environment {
     pub fn load() -> Result<Environment, String> {
-        let github_access_token = match env::var("GITHUB_ACCESS_TOKEN") {
-            Ok(v) => v,
-            Err(e) => return Err(format!("Failed to get GITHUB_ACCESS_TOKEN: {}", e)),
-        };
-        let username = match env::var("CIRCLE_PROJECT_USERNAME") {
-            Ok(v) => v,
-            Err(e) => return Err(format!("Failed to get CIRCLE_PROJECT_USERNAME: {}", e)),
-        };
-        let reponame = match env::var("CIRCLE_PROJECT_REPONAME") {
-            Ok(v) => v,
-            Err(e) => return Err(format!("Failed to get CIRCLE_PROJECT_REPONAME: {}", e)),
-        };
-        let pull_request_url = env::var("CI_PULL_REQUEST").unwrap_or(String::from(""));
-        let last_commit_comment = match process::Command::new("git")
-            .arg("--no-pager")
-            .arg("log")
-            .arg("--pretty=format:\"%s\"")
-            .arg("-1")
-            .output()
-        {
-            Ok(v) => String::from(String::from_utf8_lossy(&v.stdout)),
-            Err(e) => return Err(format!("Failed to get the last commit log: {}", e)),
-        };
+        let github_access_token = try!(
+            env::var("GITHUB_ACCESS_TOKEN")
+                .map_err(|e| format!("Failed to get GITHUB_ACCESS_TOKEN: {}", e))
+        );
+        let username = try!(
+            env::var("CIRCLE_PROJECT_USERNAME")
+                .map_err(|e| format!("Failed to get CIRCLE_PROJECT_USERNAME: {}", e))
+        );
+        let reponame = try!(
+            env::var("CIRCLE_PROJECT_REPONAME")
+                .map_err(|e| format!("Failed to get CIRCLE_PROJECT_REPONAME: {}", e))
+        );
+        let pull_request_url = env::var("CI_PULL_REQUEST").unwrap_or(String::new());
+        let last_commit_comment = try!(Environment::get_last_commit_comment());
 
         if pull_request_url.len() == 0 && last_commit_comment.len() == 0 {
             Err(String::from("Failed to get the Pull Request number"))
@@ -165,11 +153,19 @@ impl Environment {
         }
     }
 
+    fn get_last_commit_comment() -> Result<String, String> {
+        process::Command::new("git")
+            .arg("--no-pager")
+            .arg("log")
+            .arg("--pretty=format:\"%s\"")
+            .arg("-1")
+            .output()
+            .map(|v| String::from(String::from_utf8_lossy(&v.stdout)))
+            .map_err(|e| format!("Failed to get the last commit log: {}", e))
+    }
+
     pub fn get_pull_request_comment_api_url(&self) -> Result<String, String> {
-        let pull_request_number = match self.get_pull_request_number() {
-            Ok(number) => number,
-            Err(e) => return Err(e),
-        };
+        let pull_request_number = try!(self.get_pull_request_number());
         Ok(format!(
             "https://api.github.com/repos/{owner}/{repo}/issues/{number}/comments",
             owner = self.username,
@@ -187,10 +183,10 @@ impl Environment {
     }
 
     fn get_pull_request_number_from_ci_pull_request(&self) -> Result<String, String> {
-        let re = match Regex::new(r"/pull/(\d+)$") {
-            Ok(r) => r,
-            Err(e) => return Err(format!("Failed to create Regex object: {}", e)),
-        };
+        let re = try!(
+            Regex::new(r"/pull/(\d+)$")
+                .map_err(|e| format!("Failed to create Regex object: {}", e))
+        );
         match re.captures(&self.pull_request_url) {
             Some(matches) => match matches.get(1) {
                 Some(matched) => Ok(String::from(matched.as_str())),
