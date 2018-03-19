@@ -12,6 +12,39 @@ use std::io;
 use duct::cmd;
 use std::collections::HashMap;
 
+pub struct Success {
+    pub command_result: CommandResult,
+    pub error_message: Option<String>,
+}
+
+pub struct Failure {
+    pub message: String,
+}
+
+pub fn run() -> Result<Success, Failure> {
+    let matches = get_matches();
+    let environment = try!(Environment::load().map_err(|e| Failure { message: e }));
+    let (command_name, args) = parse_command_name_and_args(&matches);
+    let output = try!(
+        run_command(command_name, args.clone()).map_err(|e| Failure {
+            message: format!("Failed to run `{}`: {}", command_name, e),
+        })
+    );
+
+    let command_result = CommandResult::new(command_name, args, &output);
+    let comment = build_comment(&matches, &command_result);
+    match post_comment(comment, environment) {
+        Ok(_) => Ok(Success {
+            command_result,
+            error_message: None,
+        }),
+        Err(e) => Ok(Success {
+            command_result,
+            error_message: Some(format!("Failed to post comment to GitHub: {}", e)),
+        }),
+    }
+}
+
 const DEFAULT_EXIT_ZERO: &str = ":white_check_mark: `$ {{full_command}}` exited with `0`.
 ```
 {{result}}
