@@ -133,15 +133,10 @@ pub fn post_comment(
     let pull_request_url = environment.get_pull_request_comment_api_url()?;
     let mut body = HashMap::new();
     body.insert(String::from("body"), comment);
-    let mut headers = reqwest::header::Headers::new();
-    headers.set_raw(
-        String::from("Authorization"),
-        format!("token {}", environment.github_access_token),
-    );
     http_client
         .post(&pull_request_url)
         .json(&body)
-        .headers(headers)
+        .header("Authorization", format!("token {}", environment.github_access_token))
         .send()
         .map_err(|e| format!("Failed to post a comment to GitHub: {}", e))
 }
