@@ -1,3 +1,5 @@
+**Archived: Use [github-comment](https://github.com/suzuki-shunsuke/github-comment) instead.**
+
 # Circle GH Tee
 
 Command to run a command in Circle CI and post its result to GitHub Pull Request
